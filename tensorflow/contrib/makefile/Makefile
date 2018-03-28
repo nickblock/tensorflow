@@ -159,7 +159,7 @@ ifneq ($(TARGET),ANDROID)
   OPTFLAGS += -march=native
 endif
 
-CXXFLAGS := --std=c++11 -DIS_SLIM_BUILD -fno-exceptions -DNDEBUG $(OPTFLAGS)
+CXXFLAGS := --std=c++11 -DIS_SLIM_BUILD -fno-exceptions -DNDEBUG $(OPTFLAGS) -DSELECTIVE_REGISTRATION -DSUPPORT_SELECTIVE_REGISTRATION
 LDFLAGS := \
 -L/usr/local/lib
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
@@ -603,6 +603,8 @@ $(wildcard tensorflow/core/platform/*/*.cc) \
 $(wildcard tensorflow/core/platform/*/*/*.cc) \
 $(wildcard tensorflow/core/util/*.cc) \
 $(wildcard tensorflow/core/util/*/*.cc) \
+tensorflow/c/c_api.cc \
+tensorflow/c/c_api_function.cc \
 tensorflow/core/util/version_info.cc
 # Remove duplicates (for version_info.cc)
 CORE_CC_ALL_SRCS := $(sort $(CORE_CC_ALL_SRCS))
@@ -814,7 +816,7 @@ $(HOST_GENDIR)%.pb.cc $(HOST_GENDIR)%.pb.h: %.proto
 	@mkdir -p $(dir $@)
 	$(PROTOC) $(PROTOCFLAGS) $< --cpp_out $(HOST_GENDIR)
 
-# Gets rid of all generated files.
+# Gets rid of all generated files.¬
 clean:
 	rm -rf $(MAKEFILE_DIR)/gen
 	rm -rf tensorflow/core/util/version_info.cc
