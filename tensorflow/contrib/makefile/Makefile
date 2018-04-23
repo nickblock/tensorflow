@@ -215,7 +215,7 @@ ifeq ($(HAS_GEN_HOST_PROTOC),true)
 	LIBFLAGS += -L$(MAKEFILE_DIR)/gen/protobuf-host/lib
 	export LD_LIBRARY_PATH=$(MAKEFILE_DIR)/gen/protobuf-host/lib
 endif
-	CXXFLAGS += -fPIC -D__ANDROID__
+	CXXFLAGS += -fPIC
 	LIBFLAGS += -Wl,--allow-multiple-definition -Wl,--whole-archive
 	LDFLAGS := -Wl,--no-whole-archive
 endif
@@ -603,9 +603,13 @@ $(wildcard tensorflow/core/platform/*/*.cc) \
 $(wildcard tensorflow/core/platform/*/*/*.cc) \
 $(wildcard tensorflow/core/util/*.cc) \
 $(wildcard tensorflow/core/util/*/*.cc) \
+tensorflow/core/util/version_info.cc
+
+C_API_SRCS := \
 tensorflow/c/c_api.cc \
 tensorflow/c/c_api_function.cc \
-tensorflow/core/util/version_info.cc
+tensorflow/core/framework/op_gen_lib.cc
+
 # Remove duplicates (for version_info.cc)
 CORE_CC_ALL_SRCS := $(sort $(CORE_CC_ALL_SRCS))
 
@@ -710,6 +714,7 @@ PROTO_CC_SRCS := $(addprefix $(PROTOGENDIR), $(PROTO_SRCS:.proto=.pb.cc))
 PROTO_OBJS := $(addprefix $(OBJDIR), $(PROTO_SRCS:.proto=.pb.o))
 LIB_OBJS := $(PROTO_OBJS) $(TF_CC_OBJS) $(PBT_OBJS)
 BENCHMARK_OBJS := $(addprefix $(OBJDIR), $(BENCHMARK_SRCS:.cc=.o))
+C_API_OBJ := $(addprefix $(OBJDIR), $(C_API_SRCS:.cc=.o))
 
 .PHONY: clean cleantarget
 
@@ -745,6 +750,13 @@ $(LIBDIR)libtfcuda.a: $(CUDA_CC_OBJS)
 	@mkdir -p $(dir $@)
 	$(AR) $(ARFLAGS) $@ $(CUDA_CC_OBJS)
 endif
+
+#add the android compile flag to for the c_apis
+$(HOST_OBJDIR)%.o: $(C_API_SRCS)
+	@mkdir -p $(dir $@)
+	@mkdir -p $(dir $(DEPDIR)$*)
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) $(INCLUDES) -D__ANDROID__ -c $< -o $@
+	@mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 
 # Matches on the normal hand-written TensorFlow C++ source files.
 $(OBJDIR)%.o: %.cc | $(PBT_GEN_FILES)
